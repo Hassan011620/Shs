@@ -241,6 +241,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                         val mdl  = NamParser.build(json).getOrThrow()
                         svc?.onnx?.load(mdl)
                         _model.value = mdl
+                    } else {
+                        _msg.emit("❌ File not found: ${f.absolutePath}")
                     }
                 } else {
                     loadNam(uri)

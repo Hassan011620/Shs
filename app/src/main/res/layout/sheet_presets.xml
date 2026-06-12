@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical" android:background="#161616" android:padding="16dp">
+
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="📋 Presets" android:textColor="#FFF"
+        android:textSize="16sp" android:textStyle="bold" android:layout_marginBottom="4dp"/>
+    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:text="اضغط مطولاً للحذف" android:textColor="#555"
+        android:textSize="11sp" android:layout_marginBottom="12dp"/>
+
+    <TextView android:id="@+id/tvPresetsEmpty" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:text="لا توجد presets محفوظة"
+        android:textColor="#666" android:gravity="center" android:padding="16dp"
+        android:visibility="gone"/>
+
+    <ScrollView android:layout_width="match_parent" android:layout_height="240dp">
+        <LinearLayout android:id="@+id/llPresets" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical"/>
+    </ScrollView>
+</LinearLayout>

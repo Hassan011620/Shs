@@ -1,0 +1,84 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Java 17 ────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # ── 3. Android SDK ────────────────────────────────
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ── 4. Fix gradle-wrapper.jar ─────────────────────
+      # الـ JAR الموجود stub فقط - نولّده بالـ gradle المثبّت
+      - name: Generate Gradle Wrapper
+        run: |
+          # تثبيت gradle
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk install gradle 8.4
+          # توليد الـ wrapper
+          gradle wrapper --gradle-version 8.4
+          ls -lh gradle/wrapper/gradle-wrapper.jar
+
+      # ── 5. صلاحيات gradlew ───────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # ── 6. local.properties ───────────────────────────
+      # GitHub لا يملك local.properties - ننشئه من متغير البيئة
+      - name: Create local.properties
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          cat local.properties
+
+      # ── 7. Cache Gradle dependencies ─────────────────
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # ── 8. Build ──────────────────────────────────────
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
+
+      # ── 9. Upload APK ─────────────────────────────────
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NAMPlayer-debug-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      # ── 10. Print APK info ────────────────────────────
+      - name: APK Info
+        run: |
+          APK=app/build/outputs/apk/debug/app-debug.apk
+          if [ -f "$APK" ]; then
+            SIZE=$(du -h "$APK" | cut -f1)
+            echo "✅ APK built: $SIZE"
+          fi
